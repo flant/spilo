@@ -72,7 +72,7 @@ ARG TIMESCALEDB_LEGACY
 ARG TIMESCALEDB_APACHE_ONLY=true
 ARG DEMO
 ARG COMPRESS
-ARG PGOLDVERSIONS="9.5 9.6 10 11 12"
+ARG PGOLDVERSIONS="11 12"
 ARG WITH_PERL=false
 
 ARG DEB_PG_SUPPORTED_VERSIONS="$PGOLDVERSIONS $PGVERSION"
@@ -88,7 +88,8 @@ ENV POSTGIS_VERSION=3.1 \
     PLPROFILER=REL4_1 \
     PAM_OAUTH2=v1.0.1 \
     PLANTUNER_COMMIT=800d81bc85da64ff3ef66e12aed1d4e1e54fc006 \
-    PG_PERMISSIONS_COMMIT=314b9359e3d77c0b2ef7dbbde97fa4be80e31925
+    PG_PERMISSIONS_COMMIT=314b9359e3d77c0b2ef7dbbde97fa4be80e31925 \
+    PG_CLICKHOUSE_FWD=a730e643e36fd0f5c1970cba1a81beb2dc711489
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && set -ex \
@@ -96,7 +97,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && cd /builddeps \
 \
-    && BUILD_PACKAGES="devscripts equivs build-essential fakeroot debhelper git gcc libc6-dev make cmake libevent-dev libbrotli-dev libssl-dev libkrb5-dev" \
+    && BUILD_PACKAGES="devscripts equivs build-essential fakeroot debhelper git gcc libc6-dev make cmake libevent-dev libbrotli-dev libssl-dev libkrb5-dev uuid-dev libcurl4-openssl-dev" \
     && if [ "$DEMO" = "true" ]; then \
         export DEB_PG_SUPPORTED_VERSIONS="$PGVERSION" \
         && WITH_PERL=false \
@@ -136,6 +137,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && curl -sL https://github.com/CyberDem0n/bg_mon/archive/$BG_MON_COMMIT.tar.gz | tar xz \
     && curl -sL https://github.com/CyberDem0n/pg_auth_mon/archive/$PG_AUTH_MON_COMMIT.tar.gz | tar xz \
     && curl -sL https://github.com/cybertec-postgresql/pg_permission/archive/$PG_PERMISSIONS_COMMIT.tar.gz | tar xz \
+    && curl -sL https://github.com/adjust/clickhouse_fdw/archive/$PG_CLICKHOUSE_FWD.tar.gz | tar xz \
     && git clone -b $SET_USER https://github.com/pgaudit/set_user.git \
     # Silence annoying NOTICE messages about deprecated GUCs
     && sed -i 's/^\(bool  show_.* =\) true;/\1 false;/' set_user/compatibility.h \
@@ -217,6 +219,10 @@ RUN export DEBIAN_FRONTEND=noninteractive \
             && for n in bg_mon-${BG_MON_COMMIT} pg_auth_mon-${PG_AUTH_MON_COMMIT} set_user pg_permission-${PG_PERMISSIONS_COMMIT} $EXTRA_EXTENSIONS; do \
                 make -C $n USE_PGXS=1 clean install-strip; \
             done; \
+            cd clickhouse_fdw-${PG_CLICKHOUSEDB_FWD}; \
+            rm -rf build && mkdir -p build && cd build; \
+            cmake .. && make clean && make && make install; \
+            cd ../..;\
     done \
 \
     && apt-get install -y skytools3-ticker \
