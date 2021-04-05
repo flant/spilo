@@ -107,7 +107,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         BUILD_PACKAGES="$BUILD_PACKAGES pgxnclient zlib1g-dev libprotobuf-c-dev libpam0g-dev libcurl4-openssl-dev libicu-dev python libc-ares-dev pandoc pkg-config" \
 # debezium-decoderbufs: libprotobuf-c-dev
 # pgbouncer: libc-ares-dev pandoc pkg-config
-        && apt-get install -y $BUILD_PACKAGES libprotobuf-c1 libcurl4 \
+        && apt-get install -y $BUILD_PACKAGES libprotobuf-c1 libcurl4 libgdal20 \
 \
         # install pam_oauth2.so
         && git clone -b $PAM_OAUTH2 --recurse-submodules https://github.com/CyberDem0n/pam-oauth2.git \
@@ -219,7 +219,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
             && for n in bg_mon-${BG_MON_COMMIT} pg_auth_mon-${PG_AUTH_MON_COMMIT} set_user pg_permission-${PG_PERMISSIONS_COMMIT} $EXTRA_EXTENSIONS; do \
                 make -C $n USE_PGXS=1 clean install-strip; \
             done; \
-            cd clickhouse_fdw-${PG_CLICKHOUSEDB_FWD}; \
+            cd clickhouse_fdw-${PG_CLICKHOUSE_FWD}; \
             rm -rf build && mkdir -p build && cd build; \
             cmake .. && make clean && make && make install; \
             cd ../..;\
