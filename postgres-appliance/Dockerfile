@@ -223,6 +223,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
             rm -rf build && mkdir -p build && cd build; \
             cmake .. && make clean && make && make install; \
             cd ../..;\
+            strip /usr/lib/postgresql/$version/lib/clickhouse_fdw.so; \
     done \
 \
     && apt-get install -y skytools3-ticker \
